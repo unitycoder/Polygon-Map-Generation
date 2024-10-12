@@ -17,25 +17,26 @@ namespace ProceduralMap
 
     public enum Biomes
     {
-        Ocean,
-        Beach,
-        Lake,
-        Ice,
-        Marsh,
-        Snow,
-        Tundra,
-        Bare,
-        Scorched,
-        Taiga,
-        Shrubland,
-        Temperate_Desert,
-        Temperate_Rain_Forest,
-        Temperate_Deciduous_Forest,
-        Grassland,
-        Tropical_Rain_Forest,
-        Tropical_Seasonal_Forest,
-        Subtropical_Desert
+        Ocean = 0,
+        Beach = 1,
+        Lake = 2,
+        Ice = 3,
+        Marsh = 4,
+        Snow = 5,
+        Tundra = 6,
+        Bare = 7,
+        Scorched = 8,
+        Taiga = 9,
+        Shrubland = 10,
+        Temperate_Desert = 11,
+        Temperate_Rain_Forest = 12,
+        Temperate_Deciduous_Forest = 13,
+        Grassland = 14,
+        Tropical_Rain_Forest = 15,
+        Tropical_Seasonal_Forest = 16,
+        Subtropical_Desert = 17
     }
+
 
     public class PolygonMap : MonoBehaviour
     {

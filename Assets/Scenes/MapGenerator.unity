@@ -282,6 +282,7 @@ MonoBehaviour:
   computeShader: {fileID: 7200000, guid: ec5d0438db5ecb3428b43d19fd4930cd, type: 3}
   tileMap: {fileID: 1895042338}
   resolution: {x: 1024, y: 1024}
+  tileSize: 16
   background: 6
   overlays: 256
   selectedID: 0
@@ -368,7 +369,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useCustomSeeds: 1
   seed: 0
-  polygonCount: 1000
+  polygonCount: 1024
   size: {x: 2, y: 2}
   relaxation: 0
   islandShape: 0

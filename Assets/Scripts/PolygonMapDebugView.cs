@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Linq;
 using UnityEngine.Tilemaps;
+using System.Text;
 
 namespace ProceduralMap
 {
@@ -34,17 +35,18 @@ namespace ProceduralMap
 
         public PolygonMap generator;
         public ComputeShader computeShader;
-        
+
         [Header("Scene References")]
         public Tilemap tileMap;
 
         [Header("Options")]
         public Vector2Int resolution = new Vector2Int(512, 512);
+        [Tooltip("The size of the tiles in pixels")]
+        public int tileSize = 16;
         public ViewBG background;
         public Overlays overlays;
         public int selectedID = -1;
         public BiomeColor[] biomes;
-
 
         private Color[,] texColors;
         private RenderTexture rt;
@@ -606,40 +608,179 @@ namespace ProceduralMap
             }
         }
 
+        public static List<int[]> SplitArray(int[] mainArray, int mainWidth, int mainHeight, int subWidth, int subHeight)
+        {
+            List<int[]> subArrays = new List<int[]>();
+
+            for (int startY = 0; startY < mainHeight; startY += subHeight)
+            {
+                for (int startX = 0; startX < mainWidth; startX += subWidth)
+                {
+                    int[] subArray = new int[subWidth * subHeight];
+                    ExtractSubArray(mainArray, subArray, mainWidth, startX, startY, subWidth, subHeight);
+                    subArrays.Add(subArray);
+                }
+            }
+
+            return subArrays;
+        }
+
+        private static void ExtractSubArray(int[] sourceArray, int[] targetArray, int sourceWidth, int startX, int startY, int targetWidth, int targetHeight)
+        {
+            for (int y = 0; y < targetHeight; y++)
+            {
+                for (int x = 0; x < targetWidth; x++)
+                {
+                    targetArray[y * targetWidth + x] = sourceArray[(startY + y) * sourceWidth + (startX + x)];
+                }
+            }
+        }
 
         private void DrawBiomes()
         {
             tileMap.BoxFill(Vector3Int.zero, biomes[0].tile, 0, 0, resolution.x, resolution.y);
 
-            for (int x = 0; x < resolution.x; x++)
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("\"intGridValues\": [");
+
+            for (int i = 0; i < biomes.Length; i++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                BiomeColor biomeColor = biomes[i];
+                sb.Append($"{{ \"value\": {i + 1}, \"identifier\": \"{biomeColor.biome}\", \"color\": \"{ColorToHex(biomeColor.color)}\", \"tile\": null, \"groupUid\": 0 }}");
+
+                // Append a comma except for the last element
+                if (i < biomes.Length - 1)
                 {
-                    int currentCellID = cellIDs[x + y * resolution.y];
-                    CellCenter c = generator.cells[currentCellID];
-
-                    BiomeColor biome = biomes.FirstOrDefault(b => b.biome == c.biome);
-
-                    if (biome != null)
-                    {
-                        texColors[x, y] = biome.color;
-                        //var cc = biome.color;
-                        //cc.a = 1;
-                        //myTex.SetPixel(x, y, cc);
-                        tileMap.SetTile(new Vector3Int(x, y, 0), biome.tile);
-                    }
-                    else
-                    {
-                        texColors[x, y] = Color.black;
-                    }
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
                 }
             }
 
-            //myTex.Apply(false);
-            //pixelMap.texture = myTex;
+            sb.AppendLine("],");
+            //Debug.Log(sb.ToString());
+
+            System.IO.File.WriteAllText("biometypes.txt", sb.ToString());
+            Debug.Log("Saved data files: biometypes.txt, biomes.txt");
+
+            sb.Clear();
+
+            sb.AppendLine("\"intGridCsv\": [");
+
+            //for (int x = 0; x < resolution.x; x++)
+            //{
+            //    for (int y = 0; y < resolution.y; y++)
+            //    {
+            //        int currentCellID = cellIDs[x + y * resolution.y];
+            //        CellCenter c = generator.cells[currentCellID];
+
+            //        BiomeColor biome = biomes.FirstOrDefault(b => b.biome == c.biome);
+
+            //        if (biome != null)
+            //        {
+            //            texColors[x, y] = biome.color;
+            //            tileMap.SetTile(new Vector3Int(x, y, 0), biome.tile);
+
+            //            // Find the index of the current biome in the biomes array, TODO use biome enum index num val
+            //            int biomeEnumValue = (int)biome.biome;
+
+            //            // Append the biome index to the string builder (or any other output logic)
+            //            sb.Append($"{biomeEnumValue},");
+
+            //        }
+            //        else
+            //        {
+            //            // missing biome, TODO use a default biome 0?
+            //            texColors[x, y] = Color.black;
+            //        }
+            //    }
+            //}
+
+            int mainWidth = resolution.x;
+            int mainHeight = resolution.y;
+
+            int subWidth = 256;
+            int subHeight = 256;
+
+            List<int[]> subArrays = SplitArray(cellIDs, mainWidth, mainHeight, subWidth, subHeight);
+
+            // Now process each sub-array individually
+            for (int arrayIndex = 0; arrayIndex < subArrays.Count; arrayIndex++)
+            {
+
+
+                int[] subArray = subArrays[arrayIndex];
+                // Calculate starting global position for this sub-array
+                int subArrayStartX = (arrayIndex % (mainWidth / subWidth)) * subWidth;
+                int subArrayStartY = (arrayIndex / (mainWidth / subWidth)) * subHeight;
+
+                sb.AppendLine($"Sub-array {arrayIndex + 1}: [");
+
+                for (int x = 0; x < subWidth; x++)
+                {
+                    for (int y = 0; y < subHeight; y++)
+                    {
+                        // Calculate the global x, y positions in the main array
+                        int globalX = subArrayStartX + x;
+                        int globalY = subArrayStartY + y;
+
+                        // Calculate currentCellID from the main array
+                        int currentCellID = cellIDs[globalX + globalY * mainWidth]; // Use the global x and y
+
+                        CellCenter c = generator.cells[currentCellID];
+
+                        BiomeColor biome = biomes.FirstOrDefault(b => b.biome == c.biome);
+
+                        if (biome != null)
+                        {
+                            texColors[globalX, globalY] = biome.color;
+                            tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biome.tile);
+
+                            // Use the biome enum value
+                            int biomeEnumValue = (int)biome.biome;
+
+                            // Append the biome enum value to the string builder
+                            sb.Append($"{biomeEnumValue},");
+                        }
+                        else
+                        {
+                            // Handle missing biome (e.g., use a default biome or color)
+                            texColors[globalX, globalY] = Color.black;
+                            sb.Append($"0,"); // Assuming biome 0 for missing biome
+                        }
+                    }
+                }
+
+                // Remove the last comma from this sub-array
+                sb.Remove(sb.Length - 1, 1);
+                sb.AppendLine("\n]");
+            }
+
+            // Save to a text file
+            System.IO.File.WriteAllText("biomes.txt", sb.ToString());
+
+            //sb.AppendLine("\"intGridCsv\": [");
+            //for (int y = 0; y < biomeColors.GetLength(0); y++)
+            //{
+            //    for (int x = 0; x < biomeColors.GetLength(1); x++)
+            //    {
+            //        BiomeColor biomeColor = biomeColors[y, x];
+            //        sb.Append($"{(int)biomeColor.biome},");
+            //    }
+            //    sb.AppendLine();
+            //}
+
+            //sb.AppendLine("]");
 
         } // draw biomes
         #endregion
+
+        public string ColorToHex(Color color)
+        {
+            return $"#{(int)(color.r * 255):X2}{(int)(color.g * 255):X2}{(int)(color.b * 255):X2}";
+        }
 
         #region Draw Shapes
         private void DrawSquare(int x, int y, int size, Color c)
