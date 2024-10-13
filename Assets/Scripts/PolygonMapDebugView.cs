@@ -684,97 +684,75 @@ namespace ProceduralMap
 
             Debug.Log("res: " + mainWidth + " : " + mainHeight + " tiles");
 
-            int subWidth = 256 * 2;
-            int subHeight = 256 * 2;
-
-            List<int[]> subArrays = SplitArray(cellIDs, mainWidth, mainHeight, subWidth, subHeight);
             List<LayerInstance> layerInstances = new List<LayerInstance>();
 
-            Debug.Log("subArrays: " + subArrays.Count + " subArrays[0]. " + subArrays[0].Length);
+            int[] biomeGrid = new int[mainWidth * mainHeight];
 
-            // Now process each sub-array individually
-            for (int arrayIndex = 0; arrayIndex < subArrays.Count; arrayIndex++)
+            for (int x = 0; x < mainWidth; x++)
             {
-                int[] subArray = subArrays[arrayIndex];
-                List<long> intGridCsv = new List<long>(); // List to store biomeEnumValue for this sub-array
-
-                int adjustedIndex = 0;
-                if (arrayIndex == 0) adjustedIndex = 2;  // Top left
-                else if (arrayIndex == 1) adjustedIndex = 3;  // Top right
-                else if (arrayIndex == 2) adjustedIndex = 0;  // Bottom left
-                else if (arrayIndex == 3) adjustedIndex = 1;  // Bottom right
-
-                // Calculate starting global position for this sub-array
-                int subArrayStartX = (adjustedIndex % (mainWidth / subWidth)) * subWidth;
-                int subArrayStartY = (adjustedIndex / (mainWidth / subWidth)) * subHeight;
-
-                for (int x = 0; x < subWidth; x++)
+                for (int y = 0; y < mainHeight; y++)
                 {
-                    for (int y = 0; y < subHeight; y++)
+                    // Calculate currentCellID from the main array
+                    int index = x + y * mainWidth;
+                    int currentCellID = cellIDs[index];
+
+                    CellCenter c = generator.cells[currentCellID];
+
+                    BiomeColor biome = biomes.FirstOrDefault(b => b.biome == c.biome);
+
+                    if (biome != null)
                     {
-                        // Calculate the global x, y positions in the main array
-                        int globalX = subArrayStartX + x;
-                        int globalY = subArrayStartY + y;
+                        texColors[x, y] = biome.color;
+                        tileMap.SetTile(new Vector3Int(x, y, 0), biome.tile);
+                        //tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biomes[arrayIndex + 1].tile); // debug
 
-                        // Calculate currentCellID from the main array
-                        int currentCellID = cellIDs[globalX + globalY * mainWidth]; // Use the global x and y
+                        // Use the biome enum value
+                        int biomeEnumValue = ((int)biome.biome);
 
-                        CellCenter c = generator.cells[currentCellID];
+                        //biomeEnumValue = 0;
+                        //if (x == 0)
+                        //{
+                        //    biomeEnumValue = 1;
+                        //}
 
-                        BiomeColor biome = biomes.FirstOrDefault(b => b.biome == c.biome);
+                        //if (y == 0)
+                        //{
+                        //    biomeEnumValue = 2;
+                        //}
 
-                        if (biome != null)
-                        {
-                            texColors[globalX, globalY] = biome.color;
-                            tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biome.tile);
-                            //tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biomes[arrayIndex + 1].tile); // debug
+                        //if (x == mainWidth - 1)
+                        //{
+                        //    biomeEnumValue = 4;
+                        //}
 
-                            // Use the biome enum value
-                            int biomeEnumValue = ((int)biome.biome);
+                        //if (y == mainHeight - 1)
+                        //{
+                        //    biomeEnumValue = 3;
+                        //}
 
-                            biomeEnumValue = 0;
-                            if (x == 0)
-                            {
-                                biomeEnumValue = 1;
-                            }
+                        tileMap.SetTile(new Vector3Int(x, y, 0), biomes[biomeEnumValue].tile);
 
-                            if (y == 0)
-                            {
-                                biomeEnumValue = 2;
-                            }
+                        biomeGrid[index] = biomeEnumValue;
+                        //intGridCsv.Add(biomeEnumValue);
+                        //intGridCsv.Add(arrayIndex + 1);
+                        // 0 is undefined (not assigned), items start from 1 in the ldtk
+                        //intGridCsv.Add(biomeEnumValue);
+                    }
+                    else
+                    {
+                        // Handle missing biome (e.g., use a default biome or color)
+                        texColors[x, y] = Color.black;
+                        biomeGrid[currentCellID] = 0;
+                    }
+                }  // End of x loop
+            } // End of y loop
 
-                            if (x == subWidth - 1)
-                            {
-                                biomeEnumValue = 4;
-                            }
+            //LayerInstance layerInstance = ldtkJson.Levels[arrayIndex].LayerInstances[0];
+            //layerInstance.IntGridCsv = intGridCsv.ToArray();
 
-                            if (y == subHeight - 1)
-                            {
-                                biomeEnumValue = 3;
-                            }
-
-                            //tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biomes[biomeEnumValue].tile);
-                            //intGridCsv.Add(biomeEnumValue);
-                            //intGridCsv.Add(arrayIndex + 1);
-                            // 0 is undefined (not assigned), items start from 1 in the ldtk
-                            //intGridCsv.Add(biomeEnumValue);
-                        }
-                        else
-                        {
-                            // Handle missing biome (e.g., use a default biome or color)
-                            texColors[globalX, globalY] = Color.black;
-                        }
-                    }  // End of x loop
-                } // End of y loop
-
-                //LayerInstance layerInstance = ldtkJson.Levels[arrayIndex].LayerInstances[0];
-                //layerInstance.IntGridCsv = intGridCsv.ToArray();
-
-                Debug.Log("arrayIndex: " + (arrayIndex + 1) + " " + ldtkJson.Levels.Length + " " + biomes[arrayIndex + 1].biome.ToString());
-                //ldtkJson.Levels[subArrays.Count - 1 - arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
-                //ldtkJson.Levels[arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
-
-            } // End of sub-array loop
+            //Debug.Log("arrayIndex: " + (arrayIndex + 1) + " " + ldtkJson.Levels.Length + " " + biomes[arrayIndex + 1].biome.ToString());
+            //ldtkJson.Levels[subArrays.Count - 1 - arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
+            //ldtkJson.Levels[arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
 
             // TODO export tilemap here
             int unityTilemapWidth = 1024;  // Unity tilemap width in tiles (1024x1024)
@@ -783,7 +761,7 @@ namespace ProceduralMap
             int ldtkLevelTileHeight = 256; // Each LDTK level quadrant height in tiles
             int totalLdtkLevels = 16;      // Total levels in LDTK (4x4 grid)
 
-            Debug.Log("unity tilemapsize in cells: "+tileMap.size);
+            Debug.Log("unity tilemapsize in cells: " + tileMap.size);
 
             // Tilemap unityTilemap = yourTilemap;  // Reference your Unity Tilemap
             //LdtkJson ldtkJson = LoadLdtkJson("Assets/Levels/temp.ldtk");  // Load the LDTK file
@@ -801,9 +779,13 @@ namespace ProceduralMap
                 List<long> intGridCsv = new List<long>();  // For storing biome/tile data
 
                 // Loop through each tile in this 256x256 grid (LDTK level)
-                for (int x = 0; x < ldtkLevelTileWidth; x++)
+                //for (int x = 0; x < ldtkLevelTileWidth; x++)
+                for (int y = 0; y < ldtkLevelTileHeight; y++)
+                //for (int y = ldtkLevelTileHeight; y > 0; y--)
                 {
-                    for (int y = 0; y < ldtkLevelTileHeight; y++)
+                    for (int x = 0; x < ldtkLevelTileWidth; x++)
+                    //for (int x = ldtkLevelTileWidth; x > 0; x--)
+                    //for (int y = 0; y < ldtkLevelTileHeight; y++)
                     {
                         // Global X, Y in the 1024x1024 Unity tilemap
                         int globalX = startX + x;
@@ -814,9 +796,13 @@ namespace ProceduralMap
                         //TileBase tile = tileMap.GetTile(tilePosition);
 
                         // Assume you have logic to map Unity tiles to LDTK biome values
-                        int biomeEnumValue = arrayIndex + 1;
+                        //int biomeEnumValue = 0;// arrayIndex + 1;
+                        int biomeEnumValue = biomeGrid[globalX + globalY * mainWidth];
+
+                        //if (x < 10) biomeEnumValue = arrayIndex + 1;
 
                         //tileMap.SetTile(tilePosition, biomes[biomeEnumValue].tile);
+                        tileMap.SetTile(tilePosition, biomes[biomeEnumValue].tile);
 
                         // Add biomeEnumValue to intGridCsv
                         intGridCsv.Add(biomeEnumValue);
