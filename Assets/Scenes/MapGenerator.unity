@@ -43,7 +43,7 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -98,7 +98,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 1
+  m_LightingSettings: {fileID: 848103411}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -118,6 +118,8 @@ NavMeshSettings:
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
@@ -200,10 +202,73 @@ Transform:
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 512, y: 256, z: 512}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!850595691 &848103411
+LightingSettings:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Settings.lighting
+  serializedVersion: 4
+  m_GIWorkflowMode: 1
+  m_EnableBakedLightmaps: 0
+  m_EnableRealtimeLightmaps: 0
+  m_RealtimeEnvironmentLighting: 1
+  m_BounceScale: 1
+  m_AlbedoBoost: 1
+  m_IndirectOutputScale: 1
+  m_UsingShadowmask: 1
+  m_BakeBackend: 0
+  m_LightmapMaxSize: 1024
+  m_BakeResolution: 40
+  m_Padding: 2
+  m_LightmapCompression: 3
+  m_AO: 0
+  m_AOMaxDistance: 1
+  m_CompAOExponent: 1
+  m_CompAOExponentDirect: 0
+  m_ExtractAO: 0
+  m_MixedBakeMode: 2
+  m_LightmapsBakeMode: 1
+  m_FilterMode: 1
+  m_LightmapParameters: {fileID: 15204, guid: 0000000000000000f000000000000000, type: 0}
+  m_ExportTrainingData: 0
+  m_TrainingDataDestination: TrainingData
+  m_RealtimeResolution: 2
+  m_ForceWhiteAlbedo: 0
+  m_ForceUpdates: 0
+  m_FinalGather: 0
+  m_FinalGatherRayCount: 256
+  m_FinalGatherFiltering: 1
+  m_PVRCulling: 1
+  m_PVRSampling: 1
+  m_PVRDirectSampleCount: 32
+  m_PVRSampleCount: 500
+  m_PVREnvironmentSampleCount: 500
+  m_PVREnvironmentReferencePointCount: 2048
+  m_LightProbeSampleCountMultiplier: 4
+  m_PVRBounces: 2
+  m_PVRMinBounces: 2
+  m_PVREnvironmentMIS: 0
+  m_PVRFilteringMode: 2
+  m_PVRDenoiserTypeDirect: 0
+  m_PVRDenoiserTypeIndirect: 0
+  m_PVRDenoiserTypeAO: 0
+  m_PVRFilterTypeDirect: 0
+  m_PVRFilterTypeIndirect: 0
+  m_PVRFilterTypeAO: 0
+  m_PVRFilteringGaussRadiusDirect: 1
+  m_PVRFilteringGaussRadiusIndirect: 5
+  m_PVRFilteringGaussRadiusAO: 2
+  m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+  m_PVRFilteringAtrousPositionSigmaIndirect: 2
+  m_PVRFilteringAtrousPositionSigmaAO: 1
+  m_PVRTiledBaking: 0
 --- !u!1 &1241156545
 GameObject:
   m_ObjectHideFlags: 0
@@ -243,6 +308,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1895042336}
   m_Father: {fileID: 0}
@@ -288,57 +354,60 @@ MonoBehaviour:
   selectedID: 0
   biomes:
   - biome: 0
-    color: {r: 0, g: 0.03605346, b: 0.3207547, a: 1}
-    tile: {fileID: 11400000, guid: 7feca18d6084e5b4ab94c77f1f7e68ec, type: 2}
+    color: {r: 0, g: 0, b: 0, a: 1}
+    tile: {fileID: 0}
   - biome: 1
-    color: {r: 0.49056602, g: 0.46295983, b: 0.3216447, a: 1}
-    tile: {fileID: 11400000, guid: 6a24bcee8cfd3c4458351108999e54a9, type: 2}
+    color: {r: 1, g: 0.030271407, b: 0, a: 1}
+    tile: {fileID: 11400000, guid: 7feca18d6084e5b4ab94c77f1f7e68ec, type: 2}
   - biome: 2
-    color: {r: 0.13333333, g: 0.30247724, b: 0.59607846, a: 1}
-    tile: {fileID: 11400000, guid: a458ef26bd8aea34495e168fac838393, type: 2}
+    color: {r: 0, g: 1, b: 0.022967339, a: 1}
+    tile: {fileID: 11400000, guid: 6a24bcee8cfd3c4458351108999e54a9, type: 2}
   - biome: 3
-    color: {r: 0.5990566, g: 0.9399303, b: 1, a: 1}
-    tile: {fileID: 11400000, guid: 62e9be60047fe2047b0c371627bddfbf, type: 2}
+    color: {r: 0, g: 0.36440706, b: 1, a: 1}
+    tile: {fileID: 11400000, guid: a458ef26bd8aea34495e168fac838393, type: 2}
   - biome: 4
+    color: {r: 1, g: 0.85, b: 0, a: 1}
+    tile: {fileID: 11400000, guid: 62e9be60047fe2047b0c371627bddfbf, type: 2}
+  - biome: 5
     color: {r: 0.18155928, g: 0.4528302, b: 0.34703237, a: 1}
     tile: {fileID: 11400000, guid: 053d775876225ac4783d7baa5edbd005, type: 2}
-  - biome: 5
+  - biome: 6
     color: {r: 1, g: 1, b: 1, a: 1}
     tile: {fileID: 11400000, guid: 1032cbe10d955434aaaf2263b0917b1b, type: 2}
-  - biome: 6
+  - biome: 7
     color: {r: 0.6037736, g: 0.5825253, b: 0.56105375, a: 1}
     tile: {fileID: 11400000, guid: 8a6d57c0080acea438441140e1b85f0a, type: 2}
-  - biome: 7
+  - biome: 8
     color: {r: 0.5943396, g: 0.5943396, b: 0.5943396, a: 1}
     tile: {fileID: 11400000, guid: 6b0ad0e1cb6e48544a5125a78efb63f0, type: 2}
-  - biome: 8
+  - biome: 9
     color: {r: 0.5660378, g: 0.5145059, b: 0.49928805, a: 1}
     tile: {fileID: 11400000, guid: b0e857fec8ae0ef46a29095715652847, type: 2}
-  - biome: 9
+  - biome: 10
     color: {r: 0.25938946, g: 0.6320754, b: 0.36619455, a: 1}
     tile: {fileID: 11400000, guid: cdf1abf58890a324c93a443c66982025, type: 2}
-  - biome: 10
+  - biome: 11
     color: {r: 0.4319882, g: 0.6037736, b: 0.31612673, a: 1}
     tile: {fileID: 11400000, guid: 03d9fa6547b07a94ba875fce7933d1e4, type: 2}
-  - biome: 11
+  - biome: 12
     color: {r: 0.7924528, g: 0.67250425, b: 0.528566, a: 1}
     tile: {fileID: 11400000, guid: 4c78c22d4672d924388696a043272307, type: 2}
-  - biome: 12
+  - biome: 13
     color: {r: 0.33205768, g: 0.7735849, b: 0.37479576, a: 1}
     tile: {fileID: 11400000, guid: 93bc2e215299e2249879a8a07ec093aa, type: 2}
-  - biome: 13
+  - biome: 14
     color: {r: 0.074801125, g: 0.6792453, b: 0, a: 1}
     tile: {fileID: 11400000, guid: 05bd70833dec205479c217b3a2cb2ba5, type: 2}
-  - biome: 14
+  - biome: 15
     color: {r: 0.4092585, g: 0.8490566, b: 0.16420433, a: 1}
     tile: {fileID: 11400000, guid: 44a89b55abdde60498e8a2b8592bb454, type: 2}
-  - biome: 15
+  - biome: 16
     color: {r: 0.5959721, g: 0.8509804, b: 0.16470587, a: 1}
     tile: {fileID: 11400000, guid: 1e776b94fc888224386efa9533228c68, type: 2}
-  - biome: 16
+  - biome: 17
     color: {r: 0.22417943, g: 0.5283019, b: 0.05731578, a: 1}
     tile: {fileID: 11400000, guid: ea4df6cabb2823448a6004a45e9bbba5, type: 2}
-  - biome: 17
+  - biome: 18
     color: {r: 0.5724452, g: 0.6509434, b: 0.3285422, a: 1}
     tile: {fileID: 11400000, guid: 5afef8f26e5001845b044bd5428a6e83, type: 2}
 --- !u!4 &1554614732
@@ -351,6 +420,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
@@ -432,6 +502,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1241156547}
   m_RootOrder: 0
@@ -447,10 +518,12 @@ TilemapRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:

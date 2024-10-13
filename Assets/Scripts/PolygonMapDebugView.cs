@@ -3,6 +3,9 @@ using UnityEngine;
 using System.Linq;
 using UnityEngine.Tilemaps;
 using System.Text;
+using ldtk;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace ProceduralMap
 {
@@ -638,85 +641,72 @@ namespace ProceduralMap
 
         private void DrawBiomes()
         {
-            tileMap.BoxFill(Vector3Int.zero, biomes[0].tile, 0, 0, resolution.x, resolution.y);
+            var levelFile = "Assets/Levels/temp.ldtk";
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\"intGridValues\": [");
+            if (File.Exists(levelFile) == false)
+            {
+                Debug.LogError("File not found: " + levelFile);
+                return;
+            }
+
+            // load ldtk json file
+            var jsonString = System.IO.File.ReadAllText(levelFile);
+            var ldtkJson = LdtkJson.FromJson(jsonString);
+
+            // OPTIONAL: fill grid with default biome (0)
+            //tileMap.BoxFill(Vector3Int.zero, biomes[0].tile, 0, 0, resolution.x, resolution.y);
+
+            List<IntGridValueDefinition> intGridValues = new List<IntGridValueDefinition>();
 
             for (int i = 0; i < biomes.Length; i++)
             {
                 BiomeColor biomeColor = biomes[i];
-                sb.Append($"{{ \"value\": {i + 1}, \"identifier\": \"{biomeColor.biome}\", \"color\": \"{ColorToHex(biomeColor.color)}\", \"tile\": null, \"groupUid\": 0 }}");
 
-                // Append a comma except for the last element
-                if (i < biomes.Length - 1)
+                // Create a new IntGridValueDefinition object
+                IntGridValueDefinition intGridValue = new IntGridValueDefinition
                 {
-                    sb.AppendLine(",");
-                }
-                else
-                {
-                    sb.AppendLine();
-                }
+                    Value = i,
+                    Identifier = biomeColor.biome.ToString(), // The biome enum as a string identifier
+                    Color = ColorToHex(biomeColor.color), // Convert color to hex string
+                    Tile = null, // Assuming you don't have tile information here
+                    GroupUid = 0 // Defaulting to 0 as per your initial logic
+                };
+
+                // Add the object to the list
+                intGridValues.Add(intGridValue);
             }
 
-            sb.AppendLine("],");
-            //Debug.Log(sb.ToString());
-
-            System.IO.File.WriteAllText("biometypes.txt", sb.ToString());
-            Debug.Log("Saved data files: biometypes.txt, biomes.txt");
-
-            sb.Clear();
-
-            sb.AppendLine("\"intGridCsv\": [");
-
-            //for (int x = 0; x < resolution.x; x++)
-            //{
-            //    for (int y = 0; y < resolution.y; y++)
-            //    {
-            //        int currentCellID = cellIDs[x + y * resolution.y];
-            //        CellCenter c = generator.cells[currentCellID];
-
-            //        BiomeColor biome = biomes.FirstOrDefault(b => b.biome == c.biome);
-
-            //        if (biome != null)
-            //        {
-            //            texColors[x, y] = biome.color;
-            //            tileMap.SetTile(new Vector3Int(x, y, 0), biome.tile);
-
-            //            // Find the index of the current biome in the biomes array, TODO use biome enum index num val
-            //            int biomeEnumValue = (int)biome.biome;
-
-            //            // Append the biome index to the string builder (or any other output logic)
-            //            sb.Append($"{biomeEnumValue},");
-
-            //        }
-            //        else
-            //        {
-            //            // missing biome, TODO use a default biome 0?
-            //            texColors[x, y] = Color.black;
-            //        }
-            //    }
-            //}
+            // assign types into json
+            ldtkJson.Defs.Layers[0].IntGridValues = intGridValues.ToArray();
 
             int mainWidth = resolution.x;
             int mainHeight = resolution.y;
 
-            int subWidth = 256;
-            int subHeight = 256;
+            Debug.Log("res: " + mainWidth + " : " + mainHeight + " tiles");
+
+            int subWidth = 256 * 2;
+            int subHeight = 256 * 2;
 
             List<int[]> subArrays = SplitArray(cellIDs, mainWidth, mainHeight, subWidth, subHeight);
+            List<LayerInstance> layerInstances = new List<LayerInstance>();
+
+            Debug.Log("subArrays: " + subArrays.Count + " subArrays[0]. " + subArrays[0].Length);
 
             // Now process each sub-array individually
             for (int arrayIndex = 0; arrayIndex < subArrays.Count; arrayIndex++)
             {
-
-
                 int[] subArray = subArrays[arrayIndex];
-                // Calculate starting global position for this sub-array
-                int subArrayStartX = (arrayIndex % (mainWidth / subWidth)) * subWidth;
-                int subArrayStartY = (arrayIndex / (mainWidth / subWidth)) * subHeight;
+                List<long> intGridCsv = new List<long>(); // List to store biomeEnumValue for this sub-array
 
-                sb.AppendLine($"Sub-array {arrayIndex + 1}: [");
+                int adjustedIndex = 0;
+                if (arrayIndex == 0) adjustedIndex = 2;  // Top left
+                else if (arrayIndex == 1) adjustedIndex = 3;  // Top right
+                else if (arrayIndex == 2) adjustedIndex = 0;  // Bottom left
+                else if (arrayIndex == 3) adjustedIndex = 1;  // Bottom right
+
+                // Calculate starting global position for this sub-array
+                int subArrayStartX = (adjustedIndex % (mainWidth / subWidth)) * subWidth;
+                int subArrayStartY = (adjustedIndex / (mainWidth / subWidth)) * subHeight;
 
                 for (int x = 0; x < subWidth; x++)
                 {
@@ -737,42 +727,114 @@ namespace ProceduralMap
                         {
                             texColors[globalX, globalY] = biome.color;
                             tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biome.tile);
+                            //tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biomes[arrayIndex + 1].tile); // debug
 
                             // Use the biome enum value
-                            int biomeEnumValue = (int)biome.biome;
+                            int biomeEnumValue = ((int)biome.biome);
 
-                            // Append the biome enum value to the string builder
-                            sb.Append($"{biomeEnumValue},");
+                            biomeEnumValue = 0;
+                            if (x == 0)
+                            {
+                                biomeEnumValue = 1;
+                            }
+
+                            if (y == 0)
+                            {
+                                biomeEnumValue = 2;
+                            }
+
+                            if (x == subWidth - 1)
+                            {
+                                biomeEnumValue = 4;
+                            }
+
+                            if (y == subHeight - 1)
+                            {
+                                biomeEnumValue = 3;
+                            }
+
+                            //tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biomes[biomeEnumValue].tile);
+                            //intGridCsv.Add(biomeEnumValue);
+                            //intGridCsv.Add(arrayIndex + 1);
+                            // 0 is undefined (not assigned), items start from 1 in the ldtk
+                            //intGridCsv.Add(biomeEnumValue);
                         }
                         else
                         {
                             // Handle missing biome (e.g., use a default biome or color)
                             texColors[globalX, globalY] = Color.black;
-                            sb.Append($"0,"); // Assuming biome 0 for missing biome
                         }
+                    }  // End of x loop
+                } // End of y loop
+
+                //LayerInstance layerInstance = ldtkJson.Levels[arrayIndex].LayerInstances[0];
+                //layerInstance.IntGridCsv = intGridCsv.ToArray();
+
+                Debug.Log("arrayIndex: " + (arrayIndex + 1) + " " + ldtkJson.Levels.Length + " " + biomes[arrayIndex + 1].biome.ToString());
+                //ldtkJson.Levels[subArrays.Count - 1 - arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
+                //ldtkJson.Levels[arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
+
+            } // End of sub-array loop
+
+            // TODO export tilemap here
+            int unityTilemapWidth = 1024;  // Unity tilemap width in tiles (1024x1024)
+            int unityTilemapHeight = 1024; // Unity tilemap height in tiles
+            int ldtkLevelTileWidth = 256;  // Each LDTK level quadrant width in tiles
+            int ldtkLevelTileHeight = 256; // Each LDTK level quadrant height in tiles
+            int totalLdtkLevels = 16;      // Total levels in LDTK (4x4 grid)
+
+            Debug.Log("unity tilemapsize in cells: "+tileMap.size);
+
+            // Tilemap unityTilemap = yourTilemap;  // Reference your Unity Tilemap
+            //LdtkJson ldtkJson = LoadLdtkJson("Assets/Levels/temp.ldtk");  // Load the LDTK file
+
+            // Iterate through the 16 quadrants (4x4 grid) in Unity's tilemap
+            for (int arrayIndex = 0; arrayIndex < totalLdtkLevels; arrayIndex++)
+            {
+                // Calculate the adjusted index for the 4x4 grid
+                int adjustedIndex = arrayIndex;  // Direct mapping to 16 levels for this case
+
+                // Calculate the starting X and Y positions for this LDTK level (256x256 grid)
+                int startX = (arrayIndex % 4) * ldtkLevelTileWidth;  // 0, 256, 512, 768 for X
+                int startY = (arrayIndex / 4) * ldtkLevelTileHeight; // 0, 256, 512, 768 for Y
+
+                List<long> intGridCsv = new List<long>();  // For storing biome/tile data
+
+                // Loop through each tile in this 256x256 grid (LDTK level)
+                for (int x = 0; x < ldtkLevelTileWidth; x++)
+                {
+                    for (int y = 0; y < ldtkLevelTileHeight; y++)
+                    {
+                        // Global X, Y in the 1024x1024 Unity tilemap
+                        int globalX = startX + x;
+                        int globalY = startY + y;
+
+                        // Get the tile at this position in the Unity tilemap
+                        Vector3Int tilePosition = new Vector3Int(globalX, globalY, 0);
+                        //TileBase tile = tileMap.GetTile(tilePosition);
+
+                        // Assume you have logic to map Unity tiles to LDTK biome values
+                        int biomeEnumValue = arrayIndex + 1;
+
+                        //tileMap.SetTile(tilePosition, biomes[biomeEnumValue].tile);
+
+                        // Add biomeEnumValue to intGridCsv
+                        intGridCsv.Add(biomeEnumValue);
                     }
                 }
 
-                // Remove the last comma from this sub-array
-                sb.Remove(sb.Length - 1, 1);
-                sb.AppendLine("\n]");
+                // Assign intGridCsv to the corresponding LDTK level's LayerInstance
+                ldtkJson.Levels[adjustedIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
             }
 
-            // Save to a text file
-            System.IO.File.WriteAllText("biomes.txt", sb.ToString());
-
-            //sb.AppendLine("\"intGridCsv\": [");
-            //for (int y = 0; y < biomeColors.GetLength(0); y++)
-            //{
-            //    for (int x = 0; x < biomeColors.GetLength(1); x++)
-            //    {
-            //        BiomeColor biomeColor = biomeColors[y, x];
-            //        sb.Append($"{(int)biomeColor.biome},");
-            //    }
-            //    sb.AppendLine();
-            //}
-
             //sb.AppendLine("]");
+
+            // save new json, formatted, FIXME gridarray is all newlines one by one..
+            // BUG: ldtk fails to read? [ERROR]        Cannot read properties of null (reading 'externalLevels') (TypeError)      [ERROR] TypeError: Cannot read properties of null(reading 'externalLevels')
+            //string jsonOutput = JsonConvert.SerializeObject(ldtkJson, Formatting.Indented);
+            string jsonOutput = ldtkJson.ToJson();
+            System.IO.File.WriteAllText("Assets/Levels/temp_new.ldtk", jsonOutput);
+
 
         } // draw biomes
         #endregion

@@ -17,24 +17,25 @@ namespace ProceduralMap
 
     public enum Biomes
     {
-        Ocean = 0,
-        Beach = 1,
-        Lake = 2,
-        Ice = 3,
-        Marsh = 4,
-        Snow = 5,
-        Tundra = 6,
-        Bare = 7,
-        Scorched = 8,
-        Taiga = 9,
-        Shrubland = 10,
-        Temperate_Desert = 11,
-        Temperate_Rain_Forest = 12,
-        Temperate_Deciduous_Forest = 13,
-        Grassland = 14,
-        Tropical_Rain_Forest = 15,
-        Tropical_Seasonal_Forest = 16,
-        Subtropical_Desert = 17
+        Undefined = 0, // 0 is undefined in ldtk
+        Ocean = 1,
+        Beach = 2,
+        Lake = 3,
+        Ice = 4,
+        Marsh = 5,
+        Snow = 6,
+        Tundra = 7,
+        Bare = 8,
+        Scorched = 9,
+        Taiga = 10,
+        Shrubland = 11,
+        Temperate_Desert = 12,
+        Temperate_Rain_Forest = 13,
+        Temperate_Deciduous_Forest = 14,
+        Grassland = 15,
+        Tropical_Rain_Forest = 16,
+        Tropical_Seasonal_Forest = 17,
+        Subtropical_Desert = 18
     }
 
 
@@ -46,7 +47,7 @@ namespace ProceduralMap
         [Header("Map")]
         public int seed;
         public int polygonCount = 1000; //The number of polygons/sites we want
-        public Vector2 size = new Vector2(2,2);
+        public Vector2 size = new Vector2(2, 2);
         public int relaxation = 4;
         public Shape islandShape;
         public AnimationCurve elevationCurve = AnimationCurve.Linear(0, 0, 1, 1);
