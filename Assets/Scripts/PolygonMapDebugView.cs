@@ -694,6 +694,7 @@ namespace ProceduralMap
                 {
                     // Calculate currentCellID from the main array
                     int index = x + y * mainWidth;
+                    //int indexFlipY = x + (mainHeight-y-1) * mainWidth; // works, but then other overlays are flipped in unity
                     int currentCellID = cellIDs[index];
 
                     CellCenter c = generator.cells[currentCellID];
@@ -733,6 +734,8 @@ namespace ProceduralMap
                         tileMap.SetTile(new Vector3Int(x, y, 0), biomes[biomeEnumValue].tile);
 
                         biomeGrid[index] = biomeEnumValue;
+                        // TODO fix y flip vs ldtk
+                        //biomeGrid[indexFlipY] = biomeEnumValue;
                         //intGridCsv.Add(biomeEnumValue);
                         //intGridCsv.Add(arrayIndex + 1);
                         // 0 is undefined (not assigned), items start from 1 in the ldtk
