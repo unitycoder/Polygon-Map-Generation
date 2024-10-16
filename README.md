@@ -11,7 +11,7 @@ The map is rendered to a texture using a Compute Shader.
 This is modified fork, to generate map into Unity Tilemap
 
 ### Images
-![ss-tilemapgen](https://github.com/user-attachments/assets/7622c600-0e81-463e-b8ce-52d978fc609b)
+![image](https://github.com/user-attachments/assets/475e2770-e36f-4f2d-a106-fe0a4bd00c50)
 
 ### Video
 - Making of https://www.youtube.com/watch?v=wLWMJq2Kvcs
