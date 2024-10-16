@@ -2,10 +2,8 @@
 using UnityEngine;
 using System.Linq;
 using UnityEngine.Tilemaps;
-using System.Text;
 using ldtk;
 using System.IO;
-using Newtonsoft.Json;
 
 namespace ProceduralMap
 {
@@ -43,6 +41,10 @@ namespace ProceduralMap
         public Tilemap tileMap;
 
         [Header("Options")]
+        [Tooltip("Requires premade LDTK level with size: 256 tiles / 4049 pixels in 4x4 layout")]
+        public bool exportLDTK = false;
+        public string ldtkLevelFile = "Assets/Levels/temp.ldtk";
+
         public Vector2Int resolution = new Vector2Int(512, 512);
         [Tooltip("The size of the tiles in pixels")]
         public int tileSize = 16;
@@ -50,6 +52,8 @@ namespace ProceduralMap
         public Overlays overlays;
         public int selectedID = -1;
         public BiomeColor[] biomes;
+
+
 
         private Color[,] texColors;
         private RenderTexture rt;
@@ -59,6 +63,9 @@ namespace ProceduralMap
 
         private const int POINT_SIZE = 5;
 
+        int[] biomeGrid;
+        LdtkJson ldtkJson;
+        string jsonString;
 
 
         private struct ColorData
@@ -584,6 +591,8 @@ namespace ProceduralMap
                     DrawGraphEdge(edge, Color.blue, edge.waterVolume * 3, true);
                 }
             }
+
+            if (exportLDTK) ExportLDTK();
         }
 
         private void DrawMoisture()
@@ -641,17 +650,19 @@ namespace ProceduralMap
 
         private void DrawBiomes()
         {
-            var levelFile = "Assets/Levels/temp.ldtk";
 
-            if (File.Exists(levelFile) == false)
+            if (File.Exists(ldtkLevelFile) == false)
             {
-                Debug.LogError("File not found: " + levelFile);
+                Debug.LogError("File not found: " + ldtkLevelFile);
                 return;
             }
 
             // load ldtk json file
-            var jsonString = System.IO.File.ReadAllText(levelFile);
-            var ldtkJson = LdtkJson.FromJson(jsonString);
+            if (exportLDTK)
+            {
+                jsonString = File.ReadAllText(ldtkLevelFile);
+                ldtkJson = LdtkJson.FromJson(jsonString);
+            }
 
             // OPTIONAL: fill grid with default biome (0)
             //tileMap.BoxFill(Vector3Int.zero, biomes[0].tile, 0, 0, resolution.x, resolution.y);
@@ -677,16 +688,16 @@ namespace ProceduralMap
             }
 
             // assign types into json
-            ldtkJson.Defs.Layers[0].IntGridValues = intGridValues.ToArray();
+            if (exportLDTK) ldtkJson.Defs.Layers[0].IntGridValues = intGridValues.ToArray();
 
             int mainWidth = resolution.x;
             int mainHeight = resolution.y;
 
-            Debug.Log("res: " + mainWidth + " : " + mainHeight + " tiles");
+            //Debug.Log("res: " + mainWidth + " : " + mainHeight + " tiles");
 
             List<LayerInstance> layerInstances = new List<LayerInstance>();
 
-            int[] biomeGrid = new int[mainWidth * mainHeight];
+            biomeGrid = new int[mainWidth * mainHeight];
 
             for (int x = 0; x < mainWidth; x++)
             {
@@ -756,20 +767,16 @@ namespace ProceduralMap
             //Debug.Log("arrayIndex: " + (arrayIndex + 1) + " " + ldtkJson.Levels.Length + " " + biomes[arrayIndex + 1].biome.ToString());
             //ldtkJson.Levels[subArrays.Count - 1 - arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
             //ldtkJson.Levels[arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
+        } // draw biomes
+        #endregion
 
-            // TODO export tilemap here
-            int unityTilemapWidth = 1024;  // Unity tilemap width in tiles (1024x1024)
-            int unityTilemapHeight = 1024; // Unity tilemap height in tiles
+        void ExportLDTK()
+        {
             int ldtkLevelTileWidth = 256;  // Each LDTK level quadrant width in tiles
             int ldtkLevelTileHeight = 256; // Each LDTK level quadrant height in tiles
             int totalLdtkLevels = 16;      // Total levels in LDTK (4x4 grid)
 
-            Debug.Log("unity tilemapsize in cells: " + tileMap.size);
-
-            // Tilemap unityTilemap = yourTilemap;  // Reference your Unity Tilemap
-            //LdtkJson ldtkJson = LoadLdtkJson("Assets/Levels/temp.ldtk");  // Load the LDTK file
-
-            // Iterate through the 16 quadrants (4x4 grid) in Unity's tilemap
+            // read tilemap and export to ldtk
             for (int arrayIndex = 0; arrayIndex < totalLdtkLevels; arrayIndex++)
             {
                 // Calculate the adjusted index for the 4x4 grid
@@ -800,7 +807,7 @@ namespace ProceduralMap
 
                         // Assume you have logic to map Unity tiles to LDTK biome values
                         //int biomeEnumValue = 0;// arrayIndex + 1;
-                        int biomeEnumValue = biomeGrid[globalX + globalY * mainWidth];
+                        int biomeEnumValue = biomeGrid[globalX + globalY * resolution.x];
 
                         //if (x < 10) biomeEnumValue = arrayIndex + 1;
 
@@ -816,17 +823,14 @@ namespace ProceduralMap
                 ldtkJson.Levels[adjustedIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
             }
 
-            //sb.AppendLine("]");
-
             // save new json, formatted, FIXME gridarray is all newlines one by one..
             // BUG: ldtk fails to read? [ERROR]        Cannot read properties of null (reading 'externalLevels') (TypeError)      [ERROR] TypeError: Cannot read properties of null(reading 'externalLevels')
             //string jsonOutput = JsonConvert.SerializeObject(ldtkJson, Formatting.Indented);
             string jsonOutput = ldtkJson.ToJson();
-            System.IO.File.WriteAllText("Assets/Levels/temp_new.ldtk", jsonOutput);
-
-
-        } // draw biomes
-        #endregion
+            string exportFile = "Assets/Levels/temp_new.ldtk";
+            File.WriteAllText(exportFile, jsonOutput);
+            Debug.Log("Exported ldtk level to: " + exportFile);
+        }
 
         public string ColorToHex(Color color)
         {
@@ -876,23 +880,17 @@ namespace ProceduralMap
             {
                 for (int j = y - size; j < y + size; j++)
                 {
-                    if (i >= 0 &&
-                        i < resolution.x &&
-                        j >= 0 &&
-                        j < resolution.y &&
-                        Vector2Int.Distance(new Vector2Int(i, j), new Vector2Int(x, y)) <= size)
+                    if (i >= 0 && i < resolution.x && j >= 0 && j < resolution.y && Vector2Int.Distance(new Vector2Int(i, j), new Vector2Int(x, y)) <= size)
                     {
                         texColors[i, j] = c;
-                        //var cc = c;
-                        //c.a = 1;
-                        //myTex.SetPixel(i, j, c);
 
-                        tileMap.SetTile(new Vector3Int(i, j, 0), biomes[2].tile);
+                        // TODO use water tile? TODO if current biome is winter, use ice
+                        tileMap.SetTile(new Vector3Int(i, j, 0), biomes[3].tile);
+                        int index = i + j * resolution.x;
+                        biomeGrid[index] = 3;
                     }
                 }
             }
-
-            // myTex.Apply(false);
         }
 
         private void DrawWireCircle(int x, int y, int size, int thickness, Color c)
