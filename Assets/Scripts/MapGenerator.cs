@@ -2,58 +2,26 @@
 using UnityEngine;
 using System.Linq;
 using UnityEngine.Tilemaps;
-using ldtk;
-using System.IO;
 
 namespace ProceduralMap
 {
-    public class PolygonMapDebugView : MonoBehaviour
+    public class MapGenerator : MonoBehaviour
     {
-        public enum ViewBG
-        {
-            VoronoiCells,
-            Shape,
-            WaterAndLand,
-            Islands,
-            Elevation,
-            Moisture,
-            Biomes,
-        }
-
-        [System.Flags] //This attribute turns the enum into a bitmask, and Unity has a special inspactor for bitmasks. We use a bitmask so we can draw more modes at once. Since this is a int, we can have up to 32 values
-        public enum Overlays
-        {
-            VoronoiEdges = 1 << 0, //Bit shifts the bit value of "1" (something like 0001, but with 32 digits, since this is a int) 0 bit to the left
-            VoronoiCorners = 1 << 1, //Same as above, but shifting 1 bit to the left, so the result will be "0010" (which is 2 in Decimal)
-            DelaunayEdges = 1 << 2,
-            DelaunayCorners = 1 << 3,
-            Selected = 1 << 4,
-            Borders = 1 << 5,
-            Coast = 1 << 6,
-            Slopes = 1 << 7,
-            Rivers = 1 << 8,
-        }
-
-        public PolygonMap generator;
-        public ComputeShader computeShader;
-
         [Header("Scene References")]
         public Tilemap tileMap;
 
+        [Header("References")]
+        public PolygonMap generator;
+        public ComputeShader computeShader;
+
         [Header("Options")]
-        [Tooltip("Requires premade LDTK level with size: 256 tiles / 4049 pixels in 4x4 layout")]
-        public bool exportLDTK = false;
-        public string ldtkLevelFile = "Assets/Levels/temp.ldtk";
 
         public Vector2Int resolution = new Vector2Int(512, 512);
         [Tooltip("The size of the tiles in pixels")]
         public int tileSize = 16;
         public ViewBG background;
         public Overlays overlays;
-        public int selectedID = -1;
         public BiomeColor[] biomes;
-
-
 
         private Color[,] texColors;
         private RenderTexture rt;
@@ -62,30 +30,6 @@ namespace ProceduralMap
         private int[] cellIDs;
 
         private const int POINT_SIZE = 5;
-
-        int[] biomeGrid;
-        LdtkJson ldtkJson;
-        string jsonString;
-
-
-        private struct ColorData
-        {
-            public Vector2Int position;
-            public Color color;
-        }
-
-        private struct CellData
-        {
-            public Vector2Int position;
-        }
-
-        [System.Serializable]
-        public class BiomeColor
-        {
-            public Biomes biome;
-            public Color color;
-            public Tile tile;
-        }
 
         private void Awake()
         {
@@ -121,7 +65,6 @@ namespace ProceduralMap
             rt?.Release();
         }
 
-        #region Generation
         private void GenerateDebugTexture()
         {
             if (!Application.isPlaying)
@@ -193,21 +136,10 @@ namespace ProceduralMap
             if ((overlays & Overlays.Slopes) != 0)
                 DrawSlopes();
 
-            //We want these to be over everything
-            if ((overlays & Overlays.Selected) != 0)
-            {
-                DrawSelected();
-            }
-            else
-            {
-            }
-
             //Create the texture and assign the texture using a Helper Compute Shader
             ApplyChangesToTexture();
         }
-        #endregion
 
-        #region Helper Functions
         private void ApplyChangesToTexture()
         {
             //Create a new Buffer
@@ -256,44 +188,6 @@ namespace ProceduralMap
             };
 
             return pos;
-        }
-
-        private string GetInfoFromCell()
-        {
-            CellCenter c = generator.cells.First(x => x.index == selectedID);
-
-            string info = $"CELL:\n";
-
-            info += "\n- " + string.Join("\n- ",
-                $"id: {c.index}",
-                $"elevation: {c.elevation}",
-                $"moisture: {c.moisture}",
-                $"isCoast: {c.isCoast}",
-                $"isWater: {c.isWater}",
-                $"isOcean: {c.isOcean}",
-                $"isBorder: {c.isBorder}"
-            );
-
-            info += "\n\nEDGES:\n";
-
-            foreach (var edge in c.borderEdges)
-            {
-                info += "\n- " + string.Join("\n",
-                    $"id: {edge.index}"
-                );
-            }
-
-            info += "\n\nCORNERS:\n";
-
-            foreach (var corner in c.cellCorners)
-            {
-                info += "\n- " + string.Join("\n",
-                    $"id: {corner.index}",
-                    $"elevation: {corner.elevation}"
-                );
-            }
-
-            return info;
         }
 
         private CellCenter GetClosestCenterFromPoint(Vector2 point)
@@ -348,9 +242,7 @@ namespace ProceduralMap
 
             return centersIDs;
         }
-        #endregion
 
-        #region Draw Views
         private void DrawVoronoiCells()
         {
             for (int x = 0; x < resolution.x; x++)
@@ -393,28 +285,6 @@ namespace ProceduralMap
             foreach (var center in generator.cells)
             {
                 DrawGraphPoint(center, Color.red, POINT_SIZE);
-            }
-        }
-
-        private void DrawSelected()
-        {
-            CellCenter c = generator.cells[selectedID];
-            DrawGraphPoint(c, Color.green, POINT_SIZE * 3, 2);
-
-            for (int i = 0; i < c.neighborCells.Count; i++)
-            {
-                DrawGraphPoint(c.neighborCells[i], Color.magenta, POINT_SIZE * 2, 2);
-            }
-
-            for (int i = 0; i < c.cellCorners.Count; i++)
-            {
-                DrawGraphPoint(c.cellCorners[i], Color.yellow, POINT_SIZE * 2, 2);
-            }
-
-            for (int i = 0; i < c.borderEdges.Count; i++)
-            {
-                DrawGraphEdge(c.borderEdges[i], new Color(0, .5f, .5f), 1, false);
-                DrawGraphEdge(c.borderEdges[i], Color.cyan, 1, true);
             }
         }
 
@@ -591,8 +461,6 @@ namespace ProceduralMap
                     DrawGraphEdge(edge, Color.blue, edge.waterVolume * 3, true);
                 }
             }
-
-            if (exportLDTK) ExportLDTK();
         }
 
         private void DrawMoisture()
@@ -650,54 +518,16 @@ namespace ProceduralMap
 
         private void DrawBiomes()
         {
-
-            if (File.Exists(ldtkLevelFile) == false)
-            {
-                Debug.LogError("File not found: " + ldtkLevelFile);
-                return;
-            }
-
-            // load ldtk json file
-            if (exportLDTK)
-            {
-                jsonString = File.ReadAllText(ldtkLevelFile);
-                ldtkJson = LdtkJson.FromJson(jsonString);
-            }
-
             // OPTIONAL: fill grid with default biome (0)
             //tileMap.BoxFill(Vector3Int.zero, biomes[0].tile, 0, 0, resolution.x, resolution.y);
-
-            List<IntGridValueDefinition> intGridValues = new List<IntGridValueDefinition>();
-
-            for (int i = 0; i < biomes.Length; i++)
-            {
-                BiomeColor biomeColor = biomes[i];
-
-                // Create a new IntGridValueDefinition object
-                IntGridValueDefinition intGridValue = new IntGridValueDefinition
-                {
-                    Value = i,
-                    Identifier = biomeColor.biome.ToString(), // The biome enum as a string identifier
-                    Color = ColorToHex(biomeColor.color), // Convert color to hex string
-                    Tile = null, // Assuming you don't have tile information here
-                    GroupUid = 0 // Defaulting to 0 as per your initial logic
-                };
-
-                // Add the object to the list
-                intGridValues.Add(intGridValue);
-            }
-
-            // assign types into json
-            if (exportLDTK) ldtkJson.Defs.Layers[0].IntGridValues = intGridValues.ToArray();
 
             int mainWidth = resolution.x;
             int mainHeight = resolution.y;
 
             //Debug.Log("res: " + mainWidth + " : " + mainHeight + " tiles");
 
-            List<LayerInstance> layerInstances = new List<LayerInstance>();
-
-            biomeGrid = new int[mainWidth * mainHeight];
+            //            List<LayerInstance> layerInstances = new List<LayerInstance>();
+            //            biomeGrid = new int[mainWidth * mainHeight];
 
             for (int x = 0; x < mainWidth; x++)
             {
@@ -716,60 +546,22 @@ namespace ProceduralMap
                     {
                         texColors[x, y] = biome.color;
                         tileMap.SetTile(new Vector3Int(x, y, 0), biome.tile);
-                        //tileMap.SetTile(new Vector3Int(globalX, globalY, 0), biomes[arrayIndex + 1].tile); // debug
 
                         // Use the biome enum value
                         int biomeEnumValue = ((int)biome.biome);
 
-                        //biomeEnumValue = 0;
-                        //if (x == 0)
-                        //{
-                        //    biomeEnumValue = 1;
-                        //}
-
-                        //if (y == 0)
-                        //{
-                        //    biomeEnumValue = 2;
-                        //}
-
-                        //if (x == mainWidth - 1)
-                        //{
-                        //    biomeEnumValue = 4;
-                        //}
-
-                        //if (y == mainHeight - 1)
-                        //{
-                        //    biomeEnumValue = 3;
-                        //}
-
                         tileMap.SetTile(new Vector3Int(x, y, 0), biomes[biomeEnumValue].tile);
-
-                        biomeGrid[index] = biomeEnumValue;
-                        // TODO fix y flip vs ldtk
-                        //biomeGrid[indexFlipY] = biomeEnumValue;
-                        //intGridCsv.Add(biomeEnumValue);
-                        //intGridCsv.Add(arrayIndex + 1);
-                        // 0 is undefined (not assigned), items start from 1 in the ldtk
-                        //intGridCsv.Add(biomeEnumValue);
                     }
                     else
                     {
                         // Handle missing biome (e.g., use a default biome or color)
                         texColors[x, y] = Color.black;
-                        biomeGrid[currentCellID] = 0;
                     }
                 }  // End of x loop
             } // End of y loop
-
-            //LayerInstance layerInstance = ldtkJson.Levels[arrayIndex].LayerInstances[0];
-            //layerInstance.IntGridCsv = intGridCsv.ToArray();
-
-            //Debug.Log("arrayIndex: " + (arrayIndex + 1) + " " + ldtkJson.Levels.Length + " " + biomes[arrayIndex + 1].biome.ToString());
-            //ldtkJson.Levels[subArrays.Count - 1 - arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
-            //ldtkJson.Levels[arrayIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
         } // draw biomes
-        #endregion
 
+        // TODO remove, or might use for something else
         void ExportLDTK()
         {
             int ldtkLevelTileWidth = 256;  // Each LDTK level quadrant width in tiles
@@ -785,8 +577,6 @@ namespace ProceduralMap
                 // Calculate the starting X and Y positions for this LDTK level (256x256 grid)
                 int startX = (arrayIndex % 4) * ldtkLevelTileWidth;  // 0, 256, 512, 768 for X
                 int startY = (arrayIndex / 4) * ldtkLevelTileHeight; // 0, 256, 512, 768 for Y
-
-                List<long> intGridCsv = new List<long>();  // For storing biome/tile data
 
                 // Loop through each tile in this 256x256 grid (LDTK level)
                 //for (int x = 0; x < ldtkLevelTileWidth; x++)
@@ -807,29 +597,14 @@ namespace ProceduralMap
 
                         // Assume you have logic to map Unity tiles to LDTK biome values
                         //int biomeEnumValue = 0;// arrayIndex + 1;
-                        int biomeEnumValue = biomeGrid[globalX + globalY * resolution.x];
+                        //int biomeEnumValue = biomeGrid[globalX + globalY * resolution.x];
 
                         //if (x < 10) biomeEnumValue = arrayIndex + 1;
-
                         //tileMap.SetTile(tilePosition, biomes[biomeEnumValue].tile);
-                        tileMap.SetTile(tilePosition, biomes[biomeEnumValue].tile);
-
-                        // Add biomeEnumValue to intGridCsv
-                        intGridCsv.Add(biomeEnumValue);
                     }
                 }
 
-                // Assign intGridCsv to the corresponding LDTK level's LayerInstance
-                ldtkJson.Levels[adjustedIndex].LayerInstances[0].IntGridCsv = intGridCsv.ToArray();
             }
-
-            // save new json, formatted, FIXME gridarray is all newlines one by one..
-            // BUG: ldtk fails to read? [ERROR]        Cannot read properties of null (reading 'externalLevels') (TypeError)      [ERROR] TypeError: Cannot read properties of null(reading 'externalLevels')
-            //string jsonOutput = JsonConvert.SerializeObject(ldtkJson, Formatting.Indented);
-            string jsonOutput = ldtkJson.ToJson();
-            string exportFile = "Assets/Levels/temp_new.ldtk";
-            File.WriteAllText(exportFile, jsonOutput);
-            Debug.Log("Exported ldtk level to: " + exportFile);
         }
 
         public string ColorToHex(Color color)
@@ -837,7 +612,6 @@ namespace ProceduralMap
             return $"#{(int)(color.r * 255):X2}{(int)(color.g * 255):X2}{(int)(color.b * 255):X2}";
         }
 
-        #region Draw Shapes
         private void DrawSquare(int x, int y, int size, Color c)
         {
             Rect textureBounds = Rect.MinMaxRect(0, 0, resolution.x, resolution.y);
@@ -887,7 +661,6 @@ namespace ProceduralMap
                         // TODO use water tile? TODO if current biome is winter, use ice
                         tileMap.SetTile(new Vector3Int(i, j, 0), biomes[3].tile);
                         int index = i + j * resolution.x;
-                        biomeGrid[index] = 3;
                     }
                 }
             }
@@ -987,21 +760,6 @@ namespace ProceduralMap
                 DrawLine(pos0.x, pos0.y, pos1.x, pos1.y, thickness, c);
             }
         }
-        #endregion
 
-        private void OnValidate()
-        {
-            if (generator == null)
-                return;
-
-            if (selectedID < 0)
-                selectedID = 0;
-
-            if (selectedID >= generator.polygonCount)
-                selectedID = generator.polygonCount - 1;
-
-            if (Application.isPlaying)
-                GenerateDebugTexture();
-        }
-    }
-}
+    } // class
+} // namespace

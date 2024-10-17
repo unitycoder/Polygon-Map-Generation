@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿// original source: https://github.com/DeiveEx/Polygon-Map-Generation
 using System.Collections.Generic;
 using UnityEngine;
 using NaughtyAttributes;
@@ -7,46 +7,13 @@ using System.Linq;
 
 namespace ProceduralMap
 {
-
-    public enum Shape
-    {
-        Fill,
-        Circle,
-        Noise
-    }
-
-    public enum Biomes
-    {
-        Undefined = 0, // 0 is undefined in ldtk
-        Ocean = 1,
-        Beach = 2,
-        Lake = 3,
-        Ice = 4,
-        Marsh = 5,
-        Snow = 6,
-        Tundra = 7,
-        Bare = 8,
-        Scorched = 9,
-        Taiga = 10,
-        Shrubland = 11,
-        Temperate_Desert = 12,
-        Temperate_Rain_Forest = 13,
-        Temperate_Deciduous_Forest = 14,
-        Grassland = 15,
-        Tropical_Rain_Forest = 16,
-        Tropical_Seasonal_Forest = 17,
-        Subtropical_Desert = 18
-    }
-
-
     public class PolygonMap : MonoBehaviour
     {
-        //Properties
         public bool useCustomSeeds;
 
         [Header("Map")]
         public int seed;
-        public int polygonCount = 1000; //The number of polygons/sites we want
+        public int polygonCount = 2048; //The number of polygons/sites we want
         public Vector2 size = new Vector2(2, 2);
         public int relaxation = 4;
         public Shape islandShape;
@@ -78,7 +45,6 @@ namespace ProceduralMap
             Generate();
         }
 
-        #region Generation
         [Button]
         public void Generate()
         {
@@ -718,8 +684,6 @@ namespace ProceduralMap
             }
         }
 
-        #endregion
-
         private void OnValidate()
         {
             if (cells != null)
@@ -727,5 +691,6 @@ namespace ProceduralMap
                 onMapGenerated?.Invoke();
             }
         }
-    }
-}
+
+    } // class
+} // namespace

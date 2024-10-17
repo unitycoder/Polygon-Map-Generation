@@ -347,6 +347,8 @@ MonoBehaviour:
   generator: {fileID: 1554614733}
   computeShader: {fileID: 7200000, guid: ec5d0438db5ecb3428b43d19fd4930cd, type: 3}
   tileMap: {fileID: 1895042338}
+  exportLDTK: 0
+  ldtkLevelFile: Assets/Levels/temp.ldtk
   resolution: {x: 1024, y: 1024}
   tileSize: 16
   background: 6
@@ -358,58 +360,58 @@ MonoBehaviour:
     tile: {fileID: 0}
   - biome: 1
     color: {r: 0, g: 0.38014936, b: 0.5019608, a: 1}
-    tile: {fileID: 11400000, guid: 7feca18d6084e5b4ab94c77f1f7e68ec, type: 2}
+    tile: {fileID: 11400000, guid: 715da4477d0163e4ca1956aa4d89eee3, type: 2}
   - biome: 2
     color: {r: 0.8207547, g: 0.7393971, b: 0.3747597, a: 1}
-    tile: {fileID: 11400000, guid: 6a24bcee8cfd3c4458351108999e54a9, type: 2}
+    tile: {fileID: 11400000, guid: 7ccb026ce4a8c1046bafb258af661029, type: 2}
   - biome: 3
     color: {r: 0.14887857, g: 0.37847143, b: 0.7735849, a: 1}
-    tile: {fileID: 11400000, guid: a458ef26bd8aea34495e168fac838393, type: 2}
+    tile: {fileID: 11400000, guid: 0b68ee92a0d3b0843a1faf428a25237d, type: 2}
   - biome: 4
     color: {r: 1, g: 1, b: 1, a: 1}
-    tile: {fileID: 11400000, guid: 62e9be60047fe2047b0c371627bddfbf, type: 2}
+    tile: {fileID: 11400000, guid: 2dae51e2c7de33a4f8febcfbfdd3904c, type: 2}
   - biome: 5
     color: {r: 0.18155928, g: 0.4528302, b: 0.34703237, a: 1}
-    tile: {fileID: 11400000, guid: 053d775876225ac4783d7baa5edbd005, type: 2}
+    tile: {fileID: 11400000, guid: 1c82f0a50f19d424d9910fc1c4385ce5, type: 2}
   - biome: 6
     color: {r: 1, g: 1, b: 1, a: 1}
-    tile: {fileID: 11400000, guid: 1032cbe10d955434aaaf2263b0917b1b, type: 2}
+    tile: {fileID: 11400000, guid: 0ad3ffe69294f614ea02fb3adc671a0c, type: 2}
   - biome: 7
     color: {r: 0.6037736, g: 0.5825253, b: 0.56105375, a: 1}
-    tile: {fileID: 11400000, guid: 8a6d57c0080acea438441140e1b85f0a, type: 2}
+    tile: {fileID: 11400000, guid: aa6ff6c1d33e67d4b865a2472992aa34, type: 2}
   - biome: 8
     color: {r: 0.5943396, g: 0.5943396, b: 0.5943396, a: 1}
-    tile: {fileID: 11400000, guid: 6b0ad0e1cb6e48544a5125a78efb63f0, type: 2}
+    tile: {fileID: 11400000, guid: bf8622fa778353d4eba2772478d0f73c, type: 2}
   - biome: 9
     color: {r: 0.5660378, g: 0.5145059, b: 0.49928805, a: 1}
-    tile: {fileID: 11400000, guid: b0e857fec8ae0ef46a29095715652847, type: 2}
+    tile: {fileID: 11400000, guid: 5e252f2c10f30f64e8e7af1b1587cf61, type: 2}
   - biome: 10
     color: {r: 0.25938946, g: 0.6320754, b: 0.36619455, a: 1}
-    tile: {fileID: 11400000, guid: cdf1abf58890a324c93a443c66982025, type: 2}
+    tile: {fileID: 11400000, guid: b73b8d13a7f24c2428d7761a0b9105cb, type: 2}
   - biome: 11
     color: {r: 0.4319882, g: 0.6037736, b: 0.31612673, a: 1}
-    tile: {fileID: 11400000, guid: 03d9fa6547b07a94ba875fce7933d1e4, type: 2}
+    tile: {fileID: 11400000, guid: aaa07122765905f499da968d4a73c368, type: 2}
   - biome: 12
     color: {r: 0.7924528, g: 0.67250425, b: 0.528566, a: 1}
-    tile: {fileID: 11400000, guid: 4c78c22d4672d924388696a043272307, type: 2}
+    tile: {fileID: 11400000, guid: 095c129442986444dbca1cc37d13bf89, type: 2}
   - biome: 13
     color: {r: 0.33205768, g: 0.7735849, b: 0.37479576, a: 1}
-    tile: {fileID: 11400000, guid: 93bc2e215299e2249879a8a07ec093aa, type: 2}
+    tile: {fileID: 11400000, guid: 4211d5e9be8eab14db1f4cc92e9c933b, type: 2}
   - biome: 14
     color: {r: 0.074801125, g: 0.6792453, b: 0, a: 1}
-    tile: {fileID: 11400000, guid: 05bd70833dec205479c217b3a2cb2ba5, type: 2}
+    tile: {fileID: 11400000, guid: 6292aacd8e0c52d4183abccfa9c82c79, type: 2}
   - biome: 15
     color: {r: 0.4092585, g: 0.8490566, b: 0.16420433, a: 1}
-    tile: {fileID: 11400000, guid: 44a89b55abdde60498e8a2b8592bb454, type: 2}
+    tile: {fileID: 11400000, guid: c043e087cc13cec40adfd567725c622c, type: 2}
   - biome: 16
     color: {r: 0.5959721, g: 0.8509804, b: 0.16470587, a: 1}
-    tile: {fileID: 11400000, guid: 1e776b94fc888224386efa9533228c68, type: 2}
+    tile: {fileID: 11400000, guid: 2a4c2ff9fbcd6bf4cb65745cd59d1863, type: 2}
   - biome: 17
     color: {r: 0.22417943, g: 0.5283019, b: 0.05731578, a: 1}
-    tile: {fileID: 11400000, guid: ea4df6cabb2823448a6004a45e9bbba5, type: 2}
+    tile: {fileID: 11400000, guid: 2398bcf8168255c4e9105413ee675986, type: 2}
   - biome: 18
     color: {r: 0.5724452, g: 0.6509434, b: 0.3285422, a: 1}
-    tile: {fileID: 11400000, guid: 5afef8f26e5001845b044bd5428a6e83, type: 2}
+    tile: {fileID: 11400000, guid: c4d2b2c5d490194488881bf80b37250f, type: 2}
 --- !u!4 &1554614732
 Transform:
   m_ObjectHideFlags: 0
@@ -439,7 +441,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useCustomSeeds: 1
   seed: 0
-  polygonCount: 1024
+  polygonCount: 4096
   size: {x: 2, y: 2}
   relaxation: 0
   islandShape: 0
