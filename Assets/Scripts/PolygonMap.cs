@@ -9,7 +9,7 @@ namespace ProceduralMap
 {
     public class PolygonMap : MonoBehaviour
     {
-        public bool useCustomSeeds;
+        public bool useCustomSeed = true;
 
         [Header("Map")]
         public int seed;
@@ -54,10 +54,13 @@ namespace ProceduralMap
                 return;
             }
 
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
             //Clear all map info
             ResetMapInfo();
 
-            if (!useCustomSeeds)
+            if (useCustomSeed == false)
             {
                 seed = Random.Range(int.MinValue, int.MaxValue);
             }
@@ -81,6 +84,10 @@ namespace ProceduralMap
 
             // new seed for next generation
             seed++;
+
+            stopwatch.Stop();
+            Debug.LogFormat("Timer: {0} ms", stopwatch.ElapsedMilliseconds);
+            stopwatch.Reset();
         }
 
         private void ResetMapInfo()
@@ -501,7 +508,7 @@ namespace ProceduralMap
             //Select some corners randomly from the previous list to be used as our springs
             List<CellCorner> rivers = new List<CellCorner>();
 
-            springsSeed = useCustomSeeds ? springsSeed : Random.Range(0, 10000);
+            springsSeed = useCustomSeed ? springsSeed : Random.Range(0, 10000);
             Random.InitState(springsSeed);
 
             while (springs.Count > 0 && rivers.Count < numberOfSprings)

@@ -19,7 +19,6 @@ void GenerateTexture (uint3 id : SV_DispatchThreadID)
 	_Result[id.xy] = _ColorData[id.x + id.y * _Resolution].color; 
 }
 
-
 struct CellData
 {
 	int2 position;
@@ -35,7 +34,7 @@ void FindClosestCell (uint3 id : SV_DispatchThreadID)
 	float currentDistance;
 	float minDistance = 100000.0f;
 
-	for (int i = 0; i < _CellData.Length; i++)
+	for (uint i = 0; i < _CellData.Length; i++)
 	{
 		currentDistance = distance(_CellData[i].position, id.xy);
 

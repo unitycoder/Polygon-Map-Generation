@@ -344,16 +344,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84bbcd9f444e9b547a9d9f6b1b196941, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tileMap: {fileID: 1895042338}
   generator: {fileID: 1554614733}
   computeShader: {fileID: 7200000, guid: ec5d0438db5ecb3428b43d19fd4930cd, type: 3}
-  tileMap: {fileID: 1895042338}
-  exportLDTK: 0
-  ldtkLevelFile: Assets/Levels/temp.ldtk
-  resolution: {x: 1024, y: 1024}
-  tileSize: 16
+  tileMapResolution: {x: 1024, y: 1024}
+  tileSizePixels: 16
   background: 6
   overlays: 256
-  selectedID: 0
   biomes:
   - biome: 0
     color: {r: 0, g: 0, b: 0, a: 1}
@@ -439,7 +436,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8610397b8d0ef44a8499ad92750269e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useCustomSeeds: 1
+  useCustomSeed: 1
   seed: 0
   polygonCount: 4096
   size: {x: 2, y: 2}
@@ -452,19 +449,28 @@ MonoBehaviour:
       time: 0
       value: 0
       inSlope: 0
-      outSlope: 1
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 1
+      time: 0.6879672
       value: 1
-      inSlope: 1
-      outSlope: 0
+      inSlope: -0.13847287
+      outSlope: -0.13847287
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.23256797
+      outWeight: 0.46129507
+    - serializedVersion: 3
+      time: 1
+      value: 0.2
+      inSlope: -0.20839228
+      outSlope: -0.20839228
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.35578302
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
@@ -473,7 +479,7 @@ MonoBehaviour:
   singleIsland: 1
   minIslandSize: 0
   springsSeed: 5
-  numberOfSprings: 25
+  numberOfSprings: 15
   minSpringElevation: 0.3
   maxSpringElevation: 0.9
 --- !u!1 &1895042335

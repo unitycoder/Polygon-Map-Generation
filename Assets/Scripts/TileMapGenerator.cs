@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 
 namespace ProceduralMap
 {
-    public class MapGenerator : MonoBehaviour
+    public class TileMapGenerator : MonoBehaviour
     {
         [Header("Scene References")]
         public Tilemap tileMap;
@@ -15,10 +15,10 @@ namespace ProceduralMap
         public ComputeShader computeShader;
 
         [Header("Options")]
-
-        public Vector2Int resolution = new Vector2Int(512, 512);
-        [Tooltip("The size of the tiles in pixels")]
-        public int tileSize = 16;
+        [Tooltip("Resolution in Tiles")]
+        public Vector2Int tileMapResolution = new Vector2Int(512, 512);
+        [Tooltip("Tile size in pixels")]
+        public int tileSizePixels = 16;
         public ViewBG background;
         public Overlays overlays;
         public BiomeColor[] biomes;
@@ -34,7 +34,7 @@ namespace ProceduralMap
         private void Awake()
         {
             //Create a render texture and enable random write so we can rend things to it
-            rt = new RenderTexture(resolution.x, resolution.y, 0, RenderTextureFormat.ARGB32);
+            rt = new RenderTexture(tileMapResolution.x, tileMapResolution.y, 0, RenderTextureFormat.ARGB32);
             rt.enableRandomWrite = true;
             rt.filterMode = FilterMode.Point;
             rt.Create();
@@ -76,7 +76,7 @@ namespace ProceduralMap
             if (tileMap == null || generator == null || generator.cells == null || generator.corners.Count == 0)
                 return;
 
-            texColors = new Color[resolution.x, resolution.y];
+            texColors = new Color[tileMapResolution.x, tileMapResolution.y];
 
             //Populate the cellIDs array with the ID of the closest cell for each pixel
             cellIDs = GetClosestCenterForPixels();
@@ -143,12 +143,12 @@ namespace ProceduralMap
         private void ApplyChangesToTexture()
         {
             //Create a new Buffer
-            ComputeBuffer shaderBuffer = new ComputeBuffer(resolution.x * resolution.y, sizeof(float) * 4 + sizeof(int) * 2); //4 because a color has 4 channels, 2 because the position has X and Y
-            ColorData[] colorData = new ColorData[resolution.x * resolution.y];
+            ComputeBuffer shaderBuffer = new ComputeBuffer(tileMapResolution.x * tileMapResolution.y, sizeof(float) * 4 + sizeof(int) * 2); //4 because a color has 4 channels, 2 because the position has X and Y
+            ColorData[] colorData = new ColorData[tileMapResolution.x * tileMapResolution.y];
 
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
                     ColorData data = new ColorData()
                     {
@@ -156,15 +156,14 @@ namespace ProceduralMap
                         color = texColors[x, y]
                     };
 
-                    colorData[x + y * resolution.y] = data;
+                    colorData[x + y * tileMapResolution.y] = data;
                 }
             }
 
             shaderBuffer.SetData(colorData);
             computeShader.SetBuffer(buildTextureKernelIndex, "_ColorData", shaderBuffer);
-            computeShader.SetInt("_Resolution", resolution.x);
-
-            computeShader.Dispatch(buildTextureKernelIndex, resolution.x / 8, resolution.y / 8, 1);
+            computeShader.SetInt("_Resolution", tileMapResolution.x);
+            computeShader.Dispatch(buildTextureKernelIndex, tileMapResolution.x / 8, tileMapResolution.y / 8, 1);
             shaderBuffer?.Dispose();
         }
 
@@ -172,8 +171,8 @@ namespace ProceduralMap
         {
             Vector2Int pos = new Vector2Int()
             {
-                x = (int)(x / generator.size.x * resolution.x),
-                y = (int)(y / generator.size.y * resolution.y)
+                x = (int)(x / generator.size.x * tileMapResolution.x),
+                y = (int)(y / generator.size.y * tileMapResolution.y)
             };
 
             return pos;
@@ -183,8 +182,8 @@ namespace ProceduralMap
         {
             Vector2 pos = new Vector2()
             {
-                x = (x / (float)resolution.x) * generator.size.x,
-                y = (y / (float)resolution.y) * generator.size.y
+                x = (x / (float)tileMapResolution.x) * generator.size.x,
+                y = (y / (float)tileMapResolution.y) * generator.size.y
             };
 
             return pos;
@@ -210,11 +209,10 @@ namespace ProceduralMap
 
         private int[] GetClosestCenterForPixels()
         {
-
             //Send the data to the compute shader so the GPU can do the hard work
             CellData[] cellData = new CellData[generator.cells.Count];
             ComputeBuffer cellDataBuffer = new ComputeBuffer(generator.cells.Count, sizeof(int) * 2);
-            ComputeBuffer cellIdByPixeldBuffer = new ComputeBuffer(resolution.x * resolution.y, sizeof(int)); //This is the buffer we're gonna read from
+            ComputeBuffer cellIdByPixeldBuffer = new ComputeBuffer(tileMapResolution.x * tileMapResolution.y, sizeof(int)); //This is the buffer we're gonna read from
 
             for (int i = 0; i < cellData.Length; i++)
             {
@@ -226,15 +224,15 @@ namespace ProceduralMap
             }
 
             cellDataBuffer.SetData(cellData);
-            cellIdByPixeldBuffer.SetData(new int[resolution.x * resolution.y]); //we pass an empty array, since we just want to retrieve this data
+            cellIdByPixeldBuffer.SetData(new int[tileMapResolution.x * tileMapResolution.y]); //we pass an empty array, since we just want to retrieve this data
             computeShader.SetBuffer(findClosestCellKernelIndex, "_CellData", cellDataBuffer);
             computeShader.SetBuffer(findClosestCellKernelIndex, "_CellIDByPixel", cellIdByPixeldBuffer);
-            computeShader.SetInt("_Resolution", resolution.x);
+            computeShader.SetInt("_Resolution", tileMapResolution.x);
 
-            computeShader.Dispatch(findClosestCellKernelIndex, resolution.x / 8, resolution.y / 8, 1);
+            computeShader.Dispatch(findClosestCellKernelIndex, tileMapResolution.x / 8, tileMapResolution.y / 8, 1);
 
             //Get the result data back from the GPU
-            int[] centersIDs = new int[resolution.x * resolution.y];
+            int[] centersIDs = new int[tileMapResolution.x * tileMapResolution.y];
             cellIdByPixeldBuffer.GetData(centersIDs);
 
             cellDataBuffer?.Dispose();
@@ -245,11 +243,11 @@ namespace ProceduralMap
 
         private void DrawVoronoiCells()
         {
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
-                    int currentCellID = cellIDs[x + y * resolution.y];
+                    int currentCellID = cellIDs[x + y * tileMapResolution.y];
                     float value = currentCellID / (float)generator.cells.Count;
                     texColors[x, y] = Color.HSVToRGB(1, 0, value);
                 }
@@ -290,11 +288,11 @@ namespace ProceduralMap
 
         private void DrawMapBorders()
         {
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
-                    CellCenter c = generator.cells[cellIDs[x + y * resolution.y]];
+                    CellCenter c = generator.cells[cellIDs[x + y * tileMapResolution.y]];
 
                     if (c.isBorder)
                     {
@@ -316,11 +314,11 @@ namespace ProceduralMap
 
         private void DrawShape()
         {
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
-                    texColors[x, y] = generator.shape.IsPointInsideShape(new Vector2(x, y), resolution, generator.seed) ? Color.gray : Color.black;
+                    texColors[x, y] = generator.shape.IsPointInsideShape(new Vector2(x, y), tileMapResolution, generator.seed) ? Color.gray : Color.black;
                 }
             }
         }
@@ -332,11 +330,11 @@ namespace ProceduralMap
             Color land = new Color(.7f, .7f, .5f);
             Color coast = new Color(.5f, .5f, .3f);
 
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
-                    int currentCellID = cellIDs[x + y * resolution.y];
+                    int currentCellID = cellIDs[x + y * tileMapResolution.y];
                     CellCenter c = generator.cells[currentCellID];
 
                     if (c.isWater)
@@ -374,11 +372,11 @@ namespace ProceduralMap
                 islandColors.Add(generator.islands[i][0].islandID, Color.HSVToRGB((i * (360f / generator.islands.Count)) / 360f, Random.Range(.5f, 1), 1));
             }
 
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
-                    int currentCellID = cellIDs[x + y * resolution.y];
+                    int currentCellID = cellIDs[x + y * tileMapResolution.y];
                     CellCenter c = generator.cells[currentCellID];
 
                     if (c.islandID < 0)
@@ -413,11 +411,11 @@ namespace ProceduralMap
             Color waterDeep = Color.blue * 0.1f;
             waterDeep.a = 1;
 
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
-                    CellCenter c = generator.cells[cellIDs[x + y * resolution.y]];
+                    CellCenter c = generator.cells[cellIDs[x + y * tileMapResolution.y]];
 
                     if (c.elevation < 0)
                     {
@@ -469,11 +467,11 @@ namespace ProceduralMap
             Color wet = new Color(0.25f, .39f, .2f);
             Color dry = new Color(.8f, .7f, .5f);
 
-            for (int x = 0; x < resolution.x; x++)
+            for (int x = 0; x < tileMapResolution.x; x++)
             {
-                for (int y = 0; y < resolution.y; y++)
+                for (int y = 0; y < tileMapResolution.y; y++)
                 {
-                    int currentCellID = cellIDs[x + y * resolution.y];
+                    int currentCellID = cellIDs[x + y * tileMapResolution.y];
                     CellCenter c = generator.cells[currentCellID];
 
                     if (c.isWater)
@@ -488,41 +486,13 @@ namespace ProceduralMap
             }
         }
 
-        public static List<int[]> SplitArray(int[] mainArray, int mainWidth, int mainHeight, int subWidth, int subHeight)
-        {
-            List<int[]> subArrays = new List<int[]>();
-
-            for (int startY = 0; startY < mainHeight; startY += subHeight)
-            {
-                for (int startX = 0; startX < mainWidth; startX += subWidth)
-                {
-                    int[] subArray = new int[subWidth * subHeight];
-                    ExtractSubArray(mainArray, subArray, mainWidth, startX, startY, subWidth, subHeight);
-                    subArrays.Add(subArray);
-                }
-            }
-
-            return subArrays;
-        }
-
-        private static void ExtractSubArray(int[] sourceArray, int[] targetArray, int sourceWidth, int startX, int startY, int targetWidth, int targetHeight)
-        {
-            for (int y = 0; y < targetHeight; y++)
-            {
-                for (int x = 0; x < targetWidth; x++)
-                {
-                    targetArray[y * targetWidth + x] = sourceArray[(startY + y) * sourceWidth + (startX + x)];
-                }
-            }
-        }
-
         private void DrawBiomes()
         {
             // OPTIONAL: fill grid with default biome (0)
             //tileMap.BoxFill(Vector3Int.zero, biomes[0].tile, 0, 0, resolution.x, resolution.y);
 
-            int mainWidth = resolution.x;
-            int mainHeight = resolution.y;
+            int mainWidth = tileMapResolution.x;
+            int mainHeight = tileMapResolution.y;
 
             //Debug.Log("res: " + mainWidth + " : " + mainHeight + " tiles");
 
@@ -603,18 +573,12 @@ namespace ProceduralMap
                         //tileMap.SetTile(tilePosition, biomes[biomeEnumValue].tile);
                     }
                 }
-
             }
-        }
-
-        public string ColorToHex(Color color)
-        {
-            return $"#{(int)(color.r * 255):X2}{(int)(color.g * 255):X2}{(int)(color.b * 255):X2}";
         }
 
         private void DrawSquare(int x, int y, int size, Color c)
         {
-            Rect textureBounds = Rect.MinMaxRect(0, 0, resolution.x, resolution.y);
+            Rect textureBounds = Rect.MinMaxRect(0, 0, tileMapResolution.x, tileMapResolution.y);
 
             for (int i = x - size; i < x + size; i++)
             {
@@ -630,7 +594,7 @@ namespace ProceduralMap
 
         private void DrawWireSquare(int x, int y, int size, int thickness, Color c)
         {
-            Rect textureBounds = Rect.MinMaxRect(0, 0, resolution.x, resolution.y);
+            Rect textureBounds = Rect.MinMaxRect(0, 0, tileMapResolution.x, tileMapResolution.y);
             Rect innerRect = new Rect(x - size + thickness, y - size + thickness, size * 2 - thickness * 2, size * 2 - thickness * 2);
 
             for (int i = x - size; i < x + size; i++)
@@ -654,13 +618,13 @@ namespace ProceduralMap
             {
                 for (int j = y - size; j < y + size; j++)
                 {
-                    if (i >= 0 && i < resolution.x && j >= 0 && j < resolution.y && Vector2Int.Distance(new Vector2Int(i, j), new Vector2Int(x, y)) <= size)
+                    if (i >= 0 && i < tileMapResolution.x && j >= 0 && j < tileMapResolution.y && Vector2Int.Distance(new Vector2Int(i, j), new Vector2Int(x, y)) <= size)
                     {
                         texColors[i, j] = c;
 
                         // TODO use water tile? TODO if current biome is winter, use ice
                         tileMap.SetTile(new Vector3Int(i, j, 0), biomes[3].tile);
-                        int index = i + j * resolution.x;
+                        int index = i + j * tileMapResolution.x;
                     }
                 }
             }
@@ -675,9 +639,9 @@ namespace ProceduralMap
                 for (int j = y - size; j < y + size; j++)
                 {
                     if (i >= 0 &&
-                        i < resolution.x &&
+                        i < tileMapResolution.x &&
                         j >= 0 &&
-                        j < resolution.y &&
+                        j < tileMapResolution.y &&
                         Vector2Int.Distance(p, new Vector2Int(i, j)) <= size &&
                         Vector2Int.Distance(p, new Vector2Int(i, j)) > size - thickness)
                     {
